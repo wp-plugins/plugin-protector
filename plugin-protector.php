@@ -199,17 +199,19 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$pp_options = get_option( 'pp_settings' );
 			
 				$plugin = $_GET['plugin'];
-				if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, intercept
-					wp_redirect( admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );  // Redirect and trigger notification with pp-action=notify-upgrade
+				if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
+					wp_redirect( admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );  
 					exit;
 				}
 			}
 			break;
 		case 'update-selected': // Intercept plugin updates from bulk actions
-			$pp_action = isset($_GET['pp-action']) ? $_GET['pp-action'] : 'checking-bulk';
-			if ( 'override' != $pp_action && 'bulk-update-plugins' != $referer && ! isset( $_POST['password'] ) ) {
+			$pp_action = isset($_GET['pp-action']) ? $_GET['pp-action'] : 'checking-bulk';  // Check for pp-action
+
+			if ( 'override' != $pp_action && 'bulk-update-plugins' != $referer && ! isset( $_POST['password'] ) ) {  // If override not triggered, proceed with intercept
 				$pp_options = get_option( 'pp_settings' );
 
+				// Get selected plugins
 				if ( isset( $_GET['plugins'] ) )
 					$plugins = explode( ',', $_GET['plugins'] );
 				elseif ( isset( $_POST['checked'] ) )
@@ -219,24 +221,26 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 
 				$pp_plugins = '';
 
-				foreach ( (array) $plugins as $plugin) {
+				foreach ( (array) $plugins as $plugin) {  // Loop through selected plugins :: if protected, add to protected string
 					if ( $pp_options[ $plugin ]['protected'] && ( 'override' != $pp_action ) ) {
 						$pp_plugins .= ',' . $plugin;
 					}
 				}
-				$pp_plugins = substr( $pp_plugins, 1 );
+				$pp_plugins = substr( $pp_plugins, 1 );  // Remove starting comma
 
-				if ( '' != $pp_plugins ) {
+				if ( '' != $pp_plugins ) {  // If any selected plugins are protected, redirect and trigger notification with pp-action=notify-update :: pass plugins through URL
 					wp_redirect( admin_url( 'plugins.php?pp-action=notify-update&plugins=' . urlencode( join( ',', $plugins ) ) . '&pp-plugin=' . urlencode( $pp_plugins ) ) );
 					exit;
 				}
 			}
 			break;
 		case 'do-plugin-upgrade': // Updating from WP Updates page
-			$pp_action = isset( $_GET['pp-action'] ) ? $_GET['pp-action'] : 'checking-bulk-core';
-			if ( 'override' != $pp_action && 'bulk-update-plugins' != $referer ) {
+			$pp_action = isset( $_GET['pp-action'] ) ? $_GET['pp-action'] : 'checking-bulk-core';  // Check for pp-action
+			
+			if ( 'override' != $pp_action && 'bulk-update-plugins' != $referer ) {  // If override not triggered, proceed with intercept
 				$pp_options = get_option( 'pp_settings' );
 
+				// Get selected plugins
 				if ( isset( $_GET['plugins'] ) ) {
 					$plugins = explode( ',', $_GET['plugins'] );
 				} elseif ( isset( $_POST['checked'] ) ) {
@@ -248,26 +252,26 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 
 				$pp_plugins = '';
 
-				foreach ( (array) $plugins as $plugin ) {
+				foreach ( (array) $plugins as $plugin ) {  // Loop through selected plugins :: if protected add to protected string
 					if ( $pp_options[ $plugin ]['protected'] && ( 'override' != $pp_action ) ) {
 						$pp_plugins .= ',' . $plugin;
 					}
 				}
-				$pp_plugins = substr( $pp_plugins, 1 );
+				$pp_plugins = substr( $pp_plugins, 1 );  // Remove starting comma
 
-				if ( '' != $pp_plugins ) {
+				if ( '' != $pp_plugins ) {  // If any selected plugins are protected, redirect and trigger notification with pp-action=notify-update :: pass plugins through URL
 					wp_redirect( admin_url( 'update-core.php?pp-action=notify-update&plugins=' . urlencode( join( ',', $plugins ) ) . '&pp-plugin=' . urlencode( $pp_plugins ) ) );
 					exit;
 				}
 			}
 			break;
 		case 'delete-selected': // Deleting from link or bulk actions
-			if ( ! isset( $_REQUEST['verify-delete'] ) ) {
+			if ( ! isset( $_REQUEST['verify-delete'] ) ) {  // If verify delete has not been triggered, intercept
 				$pp_options = get_option( 'pp_settings' );
 
-				$plugins = isset( $_REQUEST['checked'] ) ? (array) $_REQUEST['checked'] : array();
+				$plugins = isset( $_REQUEST['checked'] ) ? (array) $_REQUEST['checked'] : array();  // Get selected plugins
 
-				foreach ( (array) $plugins as $plugin) {
+				foreach ( (array) $plugins as $plugin) {  // Loop through selected plugins :: if protected, dipsplay notification
 					if ( $pp_options[ $plugin ]['protected'] ) {
 						$message = 'Caution: The plugin <code>' . $plugin . '</code> has been marked as protected!';
 						$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
@@ -277,41 +281,56 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 			}
 			break;
 		default:
-			
 			break;
 	}		
 
 }
 add_action( 'check_admin_referer', 'pp_intercept_action', 10, 2 );
 
+/**************************************
+* DETERMINE NOTICES TO SHOW AND DISPLAY
+**************************************/
 
 function pp_notice() {
 		
 	if ( isset( $_GET['pp-action'] ) ) {
-		global $pagenow;
+		global $pagenow;  // Get WP global for current page
 		$pp_options = get_option( 'pp_settings' );
 
-		switch ( $_GET['pp-action'] ) {
-			case 'notify-upgrade':
+		switch ( $_GET['pp-action'] ) {  // Act on certain plugin protector actions
+			case 'notify-upgrade':  // Having intercepted a single plugin upgrade, do this ...
 				$pp_plugin = $_GET['pp-plugin'];
+
+				// Define content of notice
 				$message = 'This plugin (<code>' . $pp_plugin . '</code>) has been protected. To override protection and initiate update, click <a href="' . wp_nonce_url( self_admin_url( 'update.php?action=upgrade-plugin&plugin=' . $pp_plugin . '&pp-action=override' ), 'upgrade-plugin_' . $pp_plugin ) . '">here</a>.';
 				$message .= '' != $pp_options[ $pp_plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $pp_plugin ]['notes'] ) . "</blockquote>" : FALSE;
+				
 				pp_showNotice( $message, TRUE );
 				break;
-			case 'notify-update':
-				$pp_plugins = explode( ',', $_GET['pp-plugin'] );
-				foreach ( $pp_plugins as $pp_plugin ) {
+			case 'notify-update':  // Having intercepted a bulk plugin update, do this ...
+				$pp_plugins = explode( ',', $_GET['pp-plugin'] );  // Set protected plugin array
+
+				foreach ( $pp_plugins as $pp_plugin ) {  // Loop through protected plugins :: define content of notice and call
 					$message = 'The plugin <code>' . $pp_plugin . '</code> is protected.';
 					$message .= '' != $pp_options[ $pp_plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $pp_plugin ]['notes'] ) . "</blockquote>" : FALSE;
 					pp_showNotice( $message, TRUE );
 				}
-				'plugins.php' == $pagenow ? $pp_nonce = 'bulk-plugins' : FALSE;
-				'update-core.php' == $pagenow ? $pp_nonce = 'upgrade-core' : FALSE;
-				'plugins.php' == $pagenow ? $action = 'update-selected' : FALSE;
-				'update-core.php' == $pagenow ? $action = 'do-plugin-upgrade' : FALSE;
+
+				switch ( $pagenow ) {  // Set nonce and action depending on page
+					case 'plugins.php':
+						$pp_nonce = 'bulk-plugins';
+						$action = 'update-selected';
+						break;
+					case 'update-core.php':
+						$pp_nonce = 'upgrade-core';
+						$action = 'do-plugin-upgrade';
+					default:
+						break;
+				}
+				
 				pp_showNotice( 'To override protection and initiate update, click <a href="' . wp_nonce_url( self_admin_url( $pagenow .'?action=' . $action . '&plugins=' . $_GET['plugins'] . '&pp-action=override' ), $pp_nonce ) . '">here</a>.', TRUE );
 				break;
-			case 'override':
+			case 'override':  // Having overridden a plugin protector warning, do this ...
 				pp_showNotice( 'You have overridden plugin protection. Initializing update.' );
 				break;
 			default:
@@ -321,6 +340,10 @@ function pp_notice() {
 }
 add_action( 'admin_notices', 'pp_notice' );
 
+/**************************************
+* ASSEMBLE NOTICES
+**************************************/
+
 function pp_showNotice( $message, $errormsg = false )
 {
 	if ( $errormsg )
@@ -329,5 +352,4 @@ function pp_showNotice( $message, $errormsg = false )
 		echo '<div id="message" class="updated fade">';
 
 	echo '<p><strong>' . $message . '</strong></p></div>';
-} 
-?>
+}?>
