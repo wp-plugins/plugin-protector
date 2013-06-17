@@ -12,7 +12,7 @@ Protects against inadvertant update and deletion of select plugins.
 
 == Description ==
 
-Plugin Protector is a light-weight admin tool that adds a layer of protection when updating and deleting plugins. If you've ever added custom code to a plugin and want to protect against accidentally updating and overwriting your customizations, this plugin will allow you to mark individual plugins as 'Protected'. When protected, update or deletion requests for a plugin will trigger an admin notice confirming your action.
+A light-weight admin tool adding a layer of protection when updating and deleting plugins. If you've ever added custom code to a plugin and want to protect against accidentally updating and overwriting the customizations, this plugin will allow you to mark individual plugins as 'Protected'. When protected, update or deletion requests for a plugin will trigger an admin notice confirming your action.
 
 Documentation is also outlined [here](http://wmpl.org/blogs/vandercar/wp/plugin-protector/ "Plugin Protector Documentation").
 
@@ -32,7 +32,7 @@ Documentation is also outlined [here](http://wmpl.org/blogs/vandercar/wp/plugin-
 
 = Does this plugin save customizations I have made to plugins? =
 
-No. It only offers you additional protection against deleting or overwriting your customizations.
+No. It only offers you additional protection against deleting or overwriting your customizations. It does allow you to add notes as to why a plugin has been protected.
 
 = Can I use Plugin Protector on a multisite install? =
 
@@ -40,10 +40,16 @@ Plugin Protector is not currently functional on a networked install.
 
 == Changelog ==
 
-= 0.1 =
+= 0.2 =
 * Initial Release
+
+= 0.3 =
+* Removed undefined index notice | readme edits
 
 == Upgrade Notice ==
 
-= 0.1 =
+= 0.2 =
 * Initial Release
+
+= 0.3 =
+* Removed undefined index notice | readme edits

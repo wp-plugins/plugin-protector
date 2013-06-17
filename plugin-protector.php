@@ -1,14 +1,14 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 0.1
+ * @version 0.3
  */
 /*
 Plugin Name: Plugin Protector
 Plugin URI: http://wmpl.org/blogs/vandercar/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 0.1
+Version: 0.3
 Author URI: http://wmpl.org/blogs/vandercar/
 */
 
@@ -39,7 +39,7 @@ function pp_manage_plugin_customized_column( $column_name, $id ) {
 			} else {  // Set display for unprotected
 				$display = '<span style="color:#900;">None</span>';
 			}
-			echo $display;
+			_e( $display, 'pp_domain' );
 			break;
 		default:
 			break;
@@ -152,7 +152,7 @@ function pp_plugins_page() {
 			
 			ob_start();	 // Display checkbox field :: will write to pp_settings ?>
 				<input id="pp_<?php echo $plugin_name ?>_protected" type="checkbox" name="pp_settings[<?php echo $key ?>][protected]" value="1" <?php echo $selected; ?> />
-				<label class="description" for="pp_settings[<?php echo $key ?>][protected]"><?php _e($display, 'pp_domain'); ?></label><?php
+				<label class="description" for="pp_settings[<?php echo $key ?>][protected]"><?php _e( $display, 'pp_domain' ); ?></label><?php
 			return ob_get_clean();
 		}
 
@@ -199,9 +199,11 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$pp_options = get_option( 'pp_settings' );
 			
 				$plugin = $_GET['plugin'];
-				if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
-					wp_redirect( admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );  
-					exit;
+				if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
+					if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
+						wp_redirect( admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );  
+						exit;
+					}
 				}
 			}
 			break;
@@ -222,8 +224,10 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$pp_plugins = '';
 
 				foreach ( (array) $plugins as $plugin) {  // Loop through selected plugins :: if protected, add to protected string
-					if ( $pp_options[ $plugin ]['protected'] && ( 'override' != $pp_action ) ) {
-						$pp_plugins .= ',' . $plugin;
+					if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
+						if ( $pp_options[ $plugin ]['protected'] && ( 'override' != $pp_action ) ) {
+							$pp_plugins .= ',' . $plugin;
+						}
 					}
 				}
 				$pp_plugins = substr( $pp_plugins, 1 );  // Remove starting comma
@@ -253,8 +257,10 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$pp_plugins = '';
 
 				foreach ( (array) $plugins as $plugin ) {  // Loop through selected plugins :: if protected add to protected string
-					if ( $pp_options[ $plugin ]['protected'] && ( 'override' != $pp_action ) ) {
-						$pp_plugins .= ',' . $plugin;
+					if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
+						if ( $pp_options[ $plugin ]['protected'] && ( 'override' != $pp_action ) ) {
+							$pp_plugins .= ',' . $plugin;
+						}
 					}
 				}
 				$pp_plugins = substr( $pp_plugins, 1 );  // Remove starting comma
@@ -272,10 +278,12 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$plugins = isset( $_REQUEST['checked'] ) ? (array) $_REQUEST['checked'] : array();  // Get selected plugins
 
 				foreach ( (array) $plugins as $plugin) {  // Loop through selected plugins :: if protected, dipsplay notification
-					if ( $pp_options[ $plugin ]['protected'] ) {
-						$message = 'Caution: The plugin <code>' . $plugin . '</code> has been marked as protected!';
-						$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
-						pp_showNotice( $message, TRUE );
+					if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
+						if ( $pp_options[ $plugin ]['protected'] ) {
+							$message = 'Caution: The plugin <code>' . $plugin . '</code> has been marked as protected!';
+							$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
+							pp_showNotice( $message, TRUE );
+						}
 					}
 				}
 			}
@@ -351,5 +359,7 @@ function pp_showNotice( $message, $errormsg = false )
 	else
 		echo '<div id="message" class="updated fade">';
 
-	echo '<p><strong>' . $message . '</strong></p></div>';
+	echo '<p><strong>';
+	_e( $message, 'pp_domain' );
+	echo '</strong></p></div>';
 }?>
