@@ -1,14 +1,14 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 0.3
+ * @version 0.4
  */
 /*
 Plugin Name: Plugin Protector
 Plugin URI: http://wmpl.org/blogs/vandercar/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 0.3
+Version: 0.4
 Author URI: http://wmpl.org/blogs/vandercar/
 */
 
@@ -20,14 +20,14 @@ function pp_add_customized_column( $plugins_columns ) {
 	$plugins_columns['plugin_protected'] = _x( 'Protection', 'column name' );
 	return $plugins_columns;
 }
-add_filter( 'manage_plugins_columns', 'pp_add_customized_column' );
+is_multisite() ? add_filter( 'manage_plugins-network_columns', 'pp_add_customized_column' ) : add_filter( 'manage_plugins_columns', 'pp_add_customized_column' );
 
 /**************************************
 * PLUGIN PAGE CUSTOM COLUMN DATA
 **************************************/
 
 function pp_manage_plugin_customized_column( $column_name, $id ) {
-	$pp_options = get_option( 'pp_settings' );
+	$pp_options = is_multisite() ? get_site_option( 'pp_settings' ) : get_option( 'pp_settings' );
 	
 	switch( $column_name ) {
 		case 'plugin_protected':
@@ -54,7 +54,7 @@ add_action( 'manage_plugins_custom_column', 'pp_manage_plugin_customized_column'
 function pp_add_plugins_link() {
 	add_plugins_page( 'Protected Plugins', 'Protection', 'activate_plugins', 'pp-protected', 'pp_plugins_page' );
 }
-add_action( 'admin_menu', 'pp_add_plugins_link' );
+is_multisite() ? add_action( 'network_admin_menu', 'pp_add_plugins_link' ) : add_action( 'admin_menu', 'pp_add_plugins_link' );
 
 /**************************************
 * UPDATE PROTECTED PLUGINS DATA
@@ -67,7 +67,7 @@ function pp_write_settings() {
 		foreach ( $pp_settings as $plugin => $protected_data ) {  // Prepare text field for database
 			$pp_settings[ $plugin ]['notes'] = stripslashes( sanitize_text_field( $protected_data['notes'] ) );
 		}
-		update_option( 'pp_settings', $pp_settings );
+		is_multisite() ? update_site_option( 'pp_settings', $pp_settings ) : update_option( 'pp_settings', $pp_settings );
 	}
 }
 add_action( 'admin_init', 'pp_write_settings' );
@@ -78,7 +78,7 @@ add_action( 'admin_init', 'pp_write_settings' );
 
 function pp_plugins_page() {
 
-	if( ! class_exists( 'WP_List_Table' ) ) {
+	if ( ! class_exists( 'WP_List_Table' ) ) {
     	require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
 	}
 
@@ -92,7 +92,7 @@ function pp_plugins_page() {
 				'ajax'      => false
 				) );
 
-			$this->pp_options = get_option( 'pp_settings' );
+			$this->pp_options = is_multisite() ? get_site_option('pp_settings') : get_option( 'pp_settings' );
 			$this->plugin_data = get_plugins();  // Get all plugin data
 			$this->pp_data = array();  // Set array for table data
 
@@ -201,7 +201,7 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$plugin = $_GET['plugin'];
 				if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
 					if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
-						wp_redirect( admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );  
+						wp_redirect( self_admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );  
 						exit;
 					}
 				}
@@ -233,7 +233,7 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$pp_plugins = substr( $pp_plugins, 1 );  // Remove starting comma
 
 				if ( '' != $pp_plugins ) {  // If any selected plugins are protected, redirect and trigger notification with pp-action=notify-update :: pass plugins through URL
-					wp_redirect( admin_url( 'plugins.php?pp-action=notify-update&plugins=' . urlencode( join( ',', $plugins ) ) . '&pp-plugin=' . urlencode( $pp_plugins ) ) );
+					wp_redirect( self_admin_url( 'plugins.php?pp-action=notify-update&plugins=' . urlencode( join( ',', $plugins ) ) . '&pp-plugin=' . urlencode( $pp_plugins ) ) );
 					exit;
 				}
 			}
@@ -250,7 +250,7 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				} elseif ( isset( $_POST['checked'] ) ) {
 					$plugins = (array) $_POST['checked'];
 				} else {
-					wp_redirect( admin_url( 'update-core.php' ) );
+					wp_redirect( self_admin_url( 'update-core.php' ) );
 					exit;
 				}
 
@@ -266,7 +266,7 @@ function pp_intercept_action( $referer, $query_arg ) {  // $referer = nonce-acti
 				$pp_plugins = substr( $pp_plugins, 1 );  // Remove starting comma
 
 				if ( '' != $pp_plugins ) {  // If any selected plugins are protected, redirect and trigger notification with pp-action=notify-update :: pass plugins through URL
-					wp_redirect( admin_url( 'update-core.php?pp-action=notify-update&plugins=' . urlencode( join( ',', $plugins ) ) . '&pp-plugin=' . urlencode( $pp_plugins ) ) );
+					wp_redirect( self_admin_url( 'update-core.php?pp-action=notify-update&plugins=' . urlencode( join( ',', $plugins ) ) . '&pp-plugin=' . urlencode( $pp_plugins ) ) );
 					exit;
 				}
 			}
@@ -300,7 +300,6 @@ add_action( 'check_admin_referer', 'pp_intercept_action', 10, 2 );
 **************************************/
 
 function pp_notice() {
-		
 	if ( isset( $_GET['pp-action'] ) ) {
 		global $pagenow;  // Get WP global for current page
 		$pp_options = get_option( 'pp_settings' );
@@ -346,7 +345,7 @@ function pp_notice() {
 		}
 	}
 }
-add_action( 'admin_notices', 'pp_notice' );
+is_multisite() ? add_action( 'network_admin_notices', 'pp_notice' ) : add_action( 'admin_notices', 'pp_notice' );
 
 /**************************************
 * ASSEMBLE NOTICES
@@ -354,11 +353,7 @@ add_action( 'admin_notices', 'pp_notice' );
 
 function pp_showNotice( $message, $errormsg = false )
 {
-	if ( $errormsg )
-		echo '<div id="message" class="error">';
-	else
-		echo '<div id="message" class="updated fade">';
-
+	echo $errormsg ? '<div id="message" class="error">' : '<div id="message" class="updated fade">';
 	echo '<p><strong>';
 	_e( $message, 'pp_domain' );
 	echo '</strong></p></div>';

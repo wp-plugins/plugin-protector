@@ -14,6 +14,8 @@ Protects against inadvertant update and deletion of select plugins.
 
 A light-weight admin tool adding a layer of protection when updating and deleting plugins. If you've ever added custom code to a plugin and want to protect against accidentally updating and overwriting the customizations, this plugin will allow you to mark individual plugins as 'Protected'. When protected, update or deletion requests for a plugin will trigger an admin notice confirming your action.
 
+Plugin protection is available on both single-site installs and the network admin of multisite installs.
+
 Documentation is also outlined [here](http://wmpl.org/blogs/vandercar/wp/plugin-protector/ "Plugin Protector Documentation").
 
 == Installation ==
@@ -25,8 +27,9 @@ Documentation is also outlined [here](http://wmpl.org/blogs/vandercar/wp/plugin-
 
 1. Set Plugin Protections
 2. Plugins Page & Single Update Notice
-3. Bulk Update Notice
-4. Delete Notice
+3. Update Page & Bulk Update Notice
+4. Overridden Updates
+5. Delete Notice
 
 == Frequently Asked Questions ==
 
@@ -36,20 +39,26 @@ No. It only offers you additional protection against deleting or overwriting you
 
 = Can I use Plugin Protector on a multisite install? =
 
-Plugin Protector is not currently functional on a networked install.
+Yes, as of Version 0.4, Plugin Protector allows for protection in the network admin of a multisite install.
 
 == Changelog ==
 
 = 0.2 =
-* Initial Release
+* Initial release
 
 = 0.3 =
 * Removed undefined index notice | readme edits
+
+= 0.4 =
+* Multisite support
 
 == Upgrade Notice ==
 
 = 0.2 =
-* Initial Release
+* Initial release
 
 = 0.3 =
 * Removed undefined index notice | readme edits
+
+= 0.4 =
+* Multisite supports
