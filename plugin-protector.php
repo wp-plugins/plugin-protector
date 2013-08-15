@@ -1,14 +1,14 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 0.4
+ * @version 0.5
  */
 /*
 Plugin Name: Plugin Protector
 Plugin URI: http://wmpl.org/blogs/vandercar/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 0.4
+Version: 0.5
 Author URI: http://wmpl.org/blogs/vandercar/
 */
 
@@ -338,7 +338,7 @@ function pp_notice() {
 			}
 		}				
 	}
-	
+
 	if ( isset( $_GET['pp-action'] ) ) {
 		global $pagenow;  // Get WP global for current page
 		$pp_options = get_option( 'pp_settings' );
