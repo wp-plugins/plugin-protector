@@ -3,7 +3,7 @@ Contributors: UaMV
 Donate link: http://wmpl.org/blogs/vandercar/give
 Tags: plugins, protect, protector, protection, safe, lock, update, upgrade, delete, development
 Requires at least: 3.1
-Tested up to: 3.5
+Tested up to: 3.6
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -30,6 +30,7 @@ Documentation is also outlined [here](http://wmpl.org/blogs/vandercar/wp/plugin-
 3. Update Page & Bulk Update Notice
 4. Overridden Updates
 5. Delete Notice
+6. Edit Plugin Notice
 
 == Frequently Asked Questions ==
 
@@ -40,6 +41,10 @@ No. It only offers you additional protection against deleting or overwriting you
 = Can I use Plugin Protector on a multisite install? =
 
 Yes, as of Version 0.4, Plugin Protector allows for protection in the network admin of a multisite install.
+
+= Does Plugin Protector give me a final line of defense when updating a file from the plugin editor? =
+
+It does display a warning when you are editing a protected plugin, but does not enact any safeguards after having clicked 'Update File'.
 
 == Changelog ==
 
@@ -52,6 +57,9 @@ Yes, as of Version 0.4, Plugin Protector allows for protection in the network ad
 = 0.4 =
 * Multisite support
 
+= 0.5 =
+* Added notices in the Plugin Editor
+
 == Upgrade Notice ==
 
 = 0.2 =
@@ -62,3 +70,6 @@ Yes, as of Version 0.4, Plugin Protector allows for protection in the network ad
 
 = 0.4 =
 * Multisite supports
+
+= 0.5 =
+* Added notices in the Plugin Editor

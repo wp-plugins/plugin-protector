@@ -300,6 +300,45 @@ add_action( 'check_admin_referer', 'pp_intercept_action', 10, 2 );
 **************************************/
 
 function pp_notice() {
+	global $pagenow;  // Get WP global for current page
+
+	if ( 'plugin-editor.php' == $pagenow ) {  // Having entered the plugin editor, do this ...
+		wp_reset_vars( array( 'plugin' ) );  // reset plugin var
+
+		global $plugin, $file;
+
+		! empty ( $plugin ) ? update_option( 'pp_currently_editing', $plugin ) : FALSE ;
+
+		if ( empty ( $_GET['file'] ) && empty ( $plugin ) ) {		
+			$plugins = get_plugins();
+			$plugin = array_keys($plugins);
+			$plugin = $plugin[0];
+			 update_option( 'pp_currently_editing', $plugin );
+		} elseif ( empty( $plugin ) ) {
+			$plugin = get_option( 'pp_currently_editing' );
+		}
+		
+		$pp_options = get_option( 'pp_settings' );
+
+		if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
+			if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
+				$updated = isset ( $_GET['a'] ) ? TRUE : FALSE;
+				// Define content of notice
+				if ( $updated ) {  // If edit has been committed
+					$message = 'ALERT: Protection of <code>' . $plugin . '</code> has been overriden. Any further edits committed below to the file (<code>' . $file . '</code>) will override protection!';
+					$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
+					
+					pp_showNotice( $message, TRUE );
+				} else {
+					$message = 'CAUTION: This plugin (<code>' . $plugin . '</code>) has been marked as protected. Any edits committed below to the file (<code>' . $file . '</code>) will override this protection!';
+					$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
+					
+					pp_showNotice( $message, TRUE );
+				}
+			}
+		}				
+	}
+	
 	if ( isset( $_GET['pp-action'] ) ) {
 		global $pagenow;  // Get WP global for current page
 		$pp_options = get_option( 'pp_settings' );
