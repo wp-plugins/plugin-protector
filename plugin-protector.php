@@ -1,23 +1,76 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 0.5
+ * @version 1.0
  */
 /*
 Plugin Name: Plugin Protector
-Plugin URI: http://wmpl.org/blogs/vandercar/wp/plugin-protector/
+Plugin URI: http://vandercar.net/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 0.5
-Author URI: http://wmpl.org/blogs/vandercar/
+Version: 1.0
+Author URI: http://vandercar.net
 */
+
+define( 'PP_VERSION', '1.0' );
+
+is_admin() ? require_once( plugin_dir_path( __FILE__ ) . 'wp-side-notice/class-wp-side-notice.php' ) : FALSE;
+
+function pp_check_plugin_update() {
+
+	(float) PP_VERSION > (float) get_option( 'pp_db_version' ) ? pp_add_wpsn_notices() : FALSE;
+
+}
+add_action( 'admin_init', 'pp_check_plugin_update' );
+
+function pp_add_wpsn_notices() {
+	$pp_wpsn = new WP_Side_Notice;
+
+	$pp_wpsn_notices = array(
+		'info' => array(
+			'name' => 'info',
+			'trigger' => TRUE,
+			'time' => time() - 5,
+			'dismiss' => 'undismiss',
+			'content' => '<a href="http://wordpress.org/plugins/plugin-protector">Plugin Protector</a> developed by <a href="http://vandercar.net/wp">UaMV</a>.',
+			'style' => array( 'height' => '72px', 'color' => '#dd9701', 'icon' => 'f348' ),
+			'location' => array( 'plugins.php' ),
+			),
+		'support' => array(
+			'name' => 'support',
+			'trigger' => TRUE,
+			'time' => time() - 5,
+			'dismiss' => 'forever',
+			'content' => 'Require assistance? Find (or offer) support in our <a href="http://wordpress.org/support/plugin/plugin-protector/">support forum</a>.',
+			'style' => array( 'height' => '72px', 'color' => '#dd9701', 'icon' => 'f338' ),
+			'location' => array( 'plugins.php' ),
+			),
+		'give' => array(
+			'name' => 'give',
+			'trigger' => TRUE,
+			'time' => time() - 5,
+			'dismiss' => 'forever',
+			'content' => 'How are we doing? Consider <a href="http://wordpress.org/support/view/plugin-reviews/plugin-protector#postform">reviewing the plugin</a> or <a href="http://vandercar.net/wp">giving a dollar</a> for every headache we\'ve averted.',
+			'style' => array( 'height' => '', 'color' => '#dd9701', 'icon' => 'f313' ),
+			'location' => array( 'plugins.php' ),
+			)
+		);
+	
+	foreach ( $pp_wpsn_notices as $notice => $args ) {
+		$pp_wpsn->add( $args );
+	}
+
+	update_option( 'pp_db_version', PP_VERSION );
+	
+}
+register_activation_hook( __FILE__, 'pp_add_wpsn_notices');
 
 /**************************************
 * ADD PLUGIN PAGE CUSTOM COLUMN
 **************************************/
 
 function pp_add_customized_column( $plugins_columns ) {
-	$plugins_columns['plugin_protected'] = _x( 'Protection', 'column name' );
+	$plugins_columns['plugin_protected'] = (float) $GLOBALS['wp_version'] < 3.8 ? _x( 'Protection', 'column name' ) : _x( '<div class="dashicons dashicons-lock" style="font-size: 1.75em; margin-top: -2px;"></div>', 'column name' );
 	return $plugins_columns;
 }
 is_multisite() ? add_filter( 'manage_plugins-network_columns', 'pp_add_customized_column' ) : add_filter( 'manage_plugins_columns', 'pp_add_customized_column' );
@@ -34,10 +87,11 @@ function pp_manage_plugin_customized_column( $column_name, $id ) {
 			$pp_notes = isset ( $pp_options[ $id ]['notes'] ) ? esc_attr( $pp_options[ $id ]['notes'] ) : '';  // Get notes
 			if ( isset ( $pp_options[ $id ]['protected'] ) ) {  // Set display for protected
 				if ( $pp_options[ $id ]['protected'] === "1" ) {
-					$display = '<span style="color:#090;" title="' . $pp_notes . '">Protected</span>';
+					$display = '<div class="dashicons dashicons-lock" title="' . $pp_notes . '" style="font-size: 1.75em; margin-top: -2px;"></div>';
+					$display .= (float) $GLOBALS['wp_version'] < 3.8 ? '<strong>Protected</strong>' : '';
 				}
 			} else {  // Set display for unprotected
-				$display = '<span style="color:#900;">None</span>';
+				$display = '';
 			}
 			_e( $display, 'pp_domain' );
 			break;
@@ -52,7 +106,7 @@ add_action( 'manage_plugins_custom_column', 'pp_manage_plugin_customized_column'
 **************************************/
 
 function pp_add_plugins_link() {
-	add_plugins_page( 'Protected Plugins', 'Protection', 'activate_plugins', 'pp-protected', 'pp_plugins_page' );
+	add_plugins_page( 'Protected Plugins', 'Protection', 'edit_plugins', 'pp-protected', 'pp_plugins_page' );
 }
 is_multisite() ? add_action( 'network_admin_menu', 'pp_add_plugins_link' ) : add_action( 'admin_menu', 'pp_add_plugins_link' );
 
@@ -61,13 +115,15 @@ is_multisite() ? add_action( 'network_admin_menu', 'pp_add_plugins_link' ) : add
 **************************************/
 
 function pp_write_settings() {
-	if ( isset( $_GET['action'] ) && 'update' == $_GET['action'] ) {
+	if ( isset( $_GET['action'] ) && 'update' == $_GET['action'] && ! isset( $_GET['pp-wpsn-action'] ) ) {
+
 		$pp_settings = $_POST['pp_settings'];
 
 		foreach ( $pp_settings as $plugin => $protected_data ) {  // Prepare text field for database
 			$pp_settings[ $plugin ]['notes'] = stripslashes( sanitize_text_field( $protected_data['notes'] ) );
 		}
 		is_multisite() ? update_site_option( 'pp_settings', $pp_settings ) : update_option( 'pp_settings', $pp_settings );
+
 	}
 }
 add_action( 'admin_init', 'pp_write_settings' );
@@ -100,8 +156,8 @@ function pp_plugins_page() {
 			foreach ( $this->plugin_data as $key => $value ) {  // Loop through plugin array and set cell data per column
 				$pp_single = array(
 					'ID' 			=> $i,
-					'pluginname'	=> $value['Name'],
-					'protected'		=> $this->protected_checkbox( $key,$value ),  // Call function to set cell with checkbox
+					'pp-pluginname'	=> $value['Name'],
+					'pp-protected'		=> $this->protected_checkbox( $key,$value ),  // Call function to set cell with checkbox
 					'notes'			=> $this->protected_notes( $key,$value ),  // Call function to set cell with notes
 					);
 				array_push($this->pp_data, $pp_single);
@@ -111,8 +167,8 @@ function pp_plugins_page() {
 
 		function get_columns(){  // Define column headers
 		  $columns = array(
-		    'pluginname'	=> 'Plugin Name',
-		    'protected'		=> 'Protected',
+		    'pp-protected'	=> (float) $GLOBALS['wp_version'] < 3.8 ? 'Protection' : '<div class="dashicons dashicons-lock" style="font-size: 1.75em; margin-top: -2px;"></div>',
+		    'pp-pluginname'	=> 'Plugin Name',
 		    'notes'			=> 'Note',
 		  );
 		  return $columns;
@@ -128,8 +184,8 @@ function pp_plugins_page() {
 
 		function column_default( $item, $column_name ) {
 		  switch( $column_name ) { 
-		    case 'pluginname':
-		    case 'protected':
+		    case 'pp-pluginname':
+		    case 'pp-protected':
 		      return $item[ $column_name ];
 		    case 'notes':
 		      return $item[ $column_name ];
@@ -143,16 +199,17 @@ function pp_plugins_page() {
 			if ( isset( $this->pp_options[ $key ]['protected'] ) ) {  // Set variables for protected
 				if ( $this->pp_options[ $key ]['protected'] === "1" ) {
 					$selected = 'checked="checked"';
-					$display = '<span style="color:#090;">Protected</span>';
+					$display = (float) $GLOBALS['wp_version'] < 3.8 ? '<span style="color:#090"><strong>Protected</strong></span>' : '<div class="dashicons dashicons-lock pp-locked" style="font-size: 2.25em;"></div>';
 				}
 			} else {  // Set variables for unprotected
 				$selected = '';
-				$display = '<span style="color:#900;">Not Protected</span>';
+				$display = (float) $GLOBALS['wp_version'] < 3.8 ? '<span style="color:#900">None</span>' : '<div class="dashicons dashicons-lock pp-unlocked" style="font-size: 2.25em;"></div>';
 			}
 			
 			ob_start();	 // Display checkbox field :: will write to pp_settings ?>
-				<input id="pp_<?php echo $plugin_name ?>_protected" type="checkbox" name="pp_settings[<?php echo $key ?>][protected]" value="1" <?php echo $selected; ?> />
-				<label class="description" for="pp_settings[<?php echo $key ?>][protected]"><?php _e( $display, 'pp_domain' ); ?></label><?php
+				<label class="description" for="pp_settings[<?php echo $key ?>][protected]">
+					<input id="pp_settings[<?php echo $key ?>][protected]" type="checkbox" name="pp_settings[<?php echo $key ?>][protected]" value="1" <?php echo $selected; ?> />
+				<?php _e( $display, 'pp_domain' ); ?></label><?php
 			return ob_get_clean();
 		}
 
@@ -173,7 +230,12 @@ function pp_plugins_page() {
 	$pp_table = new PP_List_Table();  // Create PP_List_Table object :: begin page display ?>
 
 	<div class="wrap">
+		<?php
+			$pp_notices = new WP_Side_Notice();
+			$pp_notices->display();
+		?>
 		<h2>Protected Plugins</h2>
+		<?php echo (float) $GLOBALS['wp_version'] < 3.8 ? '<style type="text/css">.widefat #pp-protected.column-pp-protected {width: 6em;}</style>' : ''; ?>
 		<form method="post" action="plugins.php?page=pp-protected&action=update" class="pp-admin">
 			<?php
 				$pp_table->prepare_items();
