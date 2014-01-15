@@ -4,7 +4,7 @@
 	overflow-x: hidden;
 	margin: 0 auto;
 	width: 62px;
-	height: 600px;
+	height: 250px;
 }
 
 #wpsn-outer-container .active {
@@ -45,6 +45,9 @@
 		#wpsn-outer-container .wpsn-notice p {
 		  display: inline-block;
 		  width: 93%;
+		  line-height: 1.5;
+		  margin: 1em 0;
+		  font-size: 13px;
 		}
 
 		/* toggled .selected w/jquery accounts for clicks on touch devices */

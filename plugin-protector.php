@@ -1,18 +1,18 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 1.0
+ * @version 1.1
  */
 /*
 Plugin Name: Plugin Protector
 Plugin URI: http://vandercar.net/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 1.0
+Version: 1.1
 Author URI: http://vandercar.net
 */
 
-define( 'PP_VERSION', '1.0' );
+define( 'PP_VERSION', '1.1' );
 
 is_admin() ? require_once( plugin_dir_path( __FILE__ ) . 'wp-side-notice/class-wp-side-notice.php' ) : FALSE;
 
@@ -24,7 +24,7 @@ function pp_check_plugin_update() {
 add_action( 'admin_init', 'pp_check_plugin_update' );
 
 function pp_add_wpsn_notices() {
-	$pp_wpsn = new WP_Side_Notice;
+	$pp_wpsn = new WP_Side_Notice( 'pp' );
 
 	$pp_wpsn_notices = array(
 		'info' => array(
@@ -231,7 +231,7 @@ function pp_plugins_page() {
 
 	<div class="wrap">
 		<?php
-			$pp_notices = new WP_Side_Notice();
+			$pp_notices = new WP_Side_Notice( 'pp' );
 			$pp_notices->display();
 		?>
 		<h2>Protected Plugins</h2>

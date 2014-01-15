@@ -48,6 +48,9 @@ It does display a warning when you are editing a protected plugin, but does not 
 
 == Changelog ==
 
+= 1.1 =
+* Added class_exists to prevent conflict
+
 = 1.0 =
 * Changed capability for allowing/disallowing protection from 'activate_plugins' to 'edit_plugins'
 * Add informational notices
@@ -67,6 +70,9 @@ It does display a warning when you are editing a protected plugin, but does not 
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.1 =
+* Added class_exists to prevent conflict
 
 = 1.0 =
 * Changed capability for allowing/disallowing protection from 'activate_plugins' to 'edit_plugins'
