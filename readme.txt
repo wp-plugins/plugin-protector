@@ -1,9 +1,9 @@
 === Plugin Protector ===
 Contributors: UaMV
-Donate link: http://wmpl.org/blogs/vandercar/give
+Donate link: http://vandercar.net/wp
 Tags: plugins, protect, protector, protection, safe, lock, update, upgrade, delete, development
 Requires at least: 3.1
-Tested up to: 3.6
+Tested up to: 3.8
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -16,7 +16,7 @@ A light-weight admin tool adding a layer of protection when updating and deletin
 
 Plugin protection is available on both single-site installs and the network admin of multisite installs.
 
-Documentation is also outlined [here](http://wmpl.org/blogs/vandercar/wp/plugin-protector/ "Plugin Protector Documentation").
+Documentation is also outlined [here](http://vandercar.net/wp/plugin-protector/ "Plugin Protector Documentation").
 
 == Installation ==
 
@@ -48,28 +48,46 @@ It does display a warning when you are editing a protected plugin, but does not 
 
 == Changelog ==
 
-= 0.2 =
-* Initial release
+= 1.1 =
+* Added class_exists to prevent conflict
 
-= 0.3 =
-* Removed undefined index notice | readme edits
+= 1.0 =
+* Changed capability for allowing/disallowing protection from 'activate_plugins' to 'edit_plugins'
+* Add informational notices
+* Tweaked table display with use of dashicons
+* Updated compatability to 3.8
+
+= 0.5 =
+* Added notices in the Plugin Editor
 
 = 0.4 =
 * Multisite support
 
-= 0.5 =
-* Added notices in the Plugin Editor
-
-== Upgrade Notice ==
+= 0.3 =
+* Removed undefined index notice | readme edits
 
 = 0.2 =
 * Initial release
 
-= 0.3 =
-* Removed undefined index notice | readme edits
+== Upgrade Notice ==
 
-= 0.4 =
-* Multisite supports
+= 1.1 =
+* Added class_exists to prevent conflict
+
+= 1.0 =
+* Changed capability for allowing/disallowing protection from 'activate_plugins' to 'edit_plugins'
+* Add informational notices
+* Tweaked table display with use of dashicons
+* Updated compatability to 3.8
 
 = 0.5 =
 * Added notices in the Plugin Editor
+
+= 0.4 =
+* Multisite support
+
+= 0.3 =
+* Removed undefined index notice | readme edits
+
+= 0.2 =
+* Initial release
