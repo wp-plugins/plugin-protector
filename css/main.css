@@ -1,0 +1,19 @@
+.pp-locked {
+	color:#000;
+	position: relative;
+	top: -3px;
+}
+.pp-unlocked {
+	filter: alpha(opacity=0);
+	opacity: 0;
+	position: relative;
+	top: -3px;
+}
+.widefat .column-pp-protected {
+	vertical-align: middle;
+	width: 4em;
+}
+.widefat .column-pp-pluginname {
+	width: 15em;
+	vertical-align: middle;
+}
