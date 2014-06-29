@@ -1,22 +1,22 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 1.2
+ * @version 1.3
  */
 /*
 Plugin Name: Plugin Protector
 Plugin URI: http://vandercar.net/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 1.2
+Version: 1.3
 Author URI: http://vandercar.net
 */
 
-define( 'PP_VERSION', '1.2' );
-define( 'PP_DIR_PATH', plugin_dir_path( __FILE__ ) );
-define( 'PP_DIR_URL', plugin_dir_url( __FILE__ ) );
+define( 'PPr_VERSION', '1.3' );
+define( 'PPr_DIR_PATH', plugin_dir_path( __FILE__ ) );
+define( 'PPr_DIR_URL', plugin_dir_url( __FILE__ ) );
 
-is_admin() ? require_once( PP_DIR_PATH . 'wp-side-notice/class-wp-side-notice.php' ) : FALSE;
+is_admin() ? require_once( PPr_DIR_PATH . 'wp-side-notice/class-wp-side-notice.php' ) : FALSE;
 is_admin() ? Plugin_Protector::get_instance() : FALSE;
 
 class Plugin_Protector {
@@ -69,7 +69,7 @@ class Plugin_Protector {
 		    	require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
 			}
 
-			require_once( PP_DIR_PATH . 'class-pp-list-table.php' );
+			require_once( PPr_DIR_PATH . 'class-pp-list-table.php' );
 
 		}
 
@@ -127,7 +127,7 @@ class Plugin_Protector {
 
 			// Show the notice
 			$html = '<div class="updated">';
-				//$html .= '<a href="http://pressgr.am"><img src="' . PP_DIR_URL . 'pressgram-logo.png" style="float: left; width: 2em; height: 2em; margin-right: 0.4em; margin-top: 0.4em" /></a>';
+				//$html .= '<a href="http://pressgr.am"><img src="' . PPr_DIR_URL . 'pressgram-logo.png" style="float: left; width: 2em; height: 2em; margin-right: 0.4em; margin-top: 0.4em" /></a>';
 				$html .= '<p style="display: inline-block">';
 					$html .= __( "<strong>Nice!</strong> You are ready to protect your plugins - <a href='plugins.php?page=pp-protected'>click here</a> to prevent updates and deletion of select plugins." );
 				$html .= '</p>';
@@ -160,7 +160,7 @@ class Plugin_Protector {
 	public function check_plugin_update() {
 
 		// if current version is 2.2.0 and previos is older, then transfer options
-		(float) PP_VERSION > (float) get_option( 'pp_db_version' ) ? $this->add_wpsn_notices() : FALSE;
+		(float) PPr_VERSION > (float) get_option( 'pp_db_version' ) ? $this->add_wpsn_notices() : FALSE;
 
 	} // end check_plugin_update
 
@@ -212,7 +212,7 @@ class Plugin_Protector {
 			$side_notices->add( $args );
 		}
 
-		update_option( 'pp_db_version', PP_VERSION );
+		update_option( 'pp_db_version', PPr_VERSION );
 
 	} // end display_notices
 
@@ -223,7 +223,7 @@ class Plugin_Protector {
 	 */
 	public function add_stylesheets_and_javascript() {
 		
-		wp_enqueue_style( 'pp-style', PP_DIR_URL . 'css/main.css', array(), PP_VERSION, 'screen' );
+		wp_enqueue_style( 'pp-style', PPr_DIR_URL . 'css/main.css', array(), PPr_VERSION, 'screen' );
 		
 	} // end add_stylesheets_and_javascript
 
@@ -294,7 +294,7 @@ class Plugin_Protector {
 
 	function pp_plugins_page() {
 	 
-		$pp_table = new PP_List_Table();  // Create PP_List_Table object :: begin page display ?>
+		$pp_table = new PPr_List_Table();  // Create PP_List_Table object :: begin page display ?>
 
 		<div class="wrap">
 			<?php
@@ -411,7 +411,7 @@ class Plugin_Protector {
 							if ( $pp_options[ $plugin ]['protected'] ) {
 								$message = 'Caution: The plugin <code>' . $plugin . '</code> has been marked as protected!';
 								$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
-								pp_showNotice( $message, TRUE );
+								$this->pp_showNotice( $message, TRUE );
 							}
 						}
 					}

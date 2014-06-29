@@ -48,6 +48,9 @@ It does display a warning when you are editing a protected plugin, but does not 
 
 == Changelog ==
 
+= 1.3 =
+* Fix conflicts with Press Permit
+
 = 1.2 =
 * Reverted capability for allowing/disallowing protection from 'edit_plugins' to 'activate_plugins'
 * Wrapped code in class
@@ -75,6 +78,9 @@ It does display a warning when you are editing a protected plugin, but does not 
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.3 =
+* Fix conflicts with Press Permit
 
 = 1.2 =
 * Reverted capability for allowing/disallowing protection from 'edit_plugins' to 'activate_plugins'

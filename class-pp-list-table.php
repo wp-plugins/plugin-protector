@@ -1,5 +1,5 @@
 <?php
-class PP_List_Table extends WP_List_Table {
+class PPr_List_Table extends WP_List_Table {
 	var $pp_options, $plugin_data, $pp_data;
 
 	function __construct() {
