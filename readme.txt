@@ -3,7 +3,7 @@ Contributors: UaMV
 Donate link: http://vandercar.net/wp
 Tags: plugins, protect, protector, protection, safe, lock, update, upgrade, delete, development
 Requires at least: 3.1
-Tested up to: 3.8
+Tested up to: 3.9.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -48,6 +48,14 @@ It does display a warning when you are editing a protected plugin, but does not 
 
 == Changelog ==
 
+= 1.3 =
+* Fix conflicts with Press Permit
+
+= 1.2 =
+* Reverted capability for allowing/disallowing protection from 'edit_plugins' to 'activate_plugins'
+* Wrapped code in class
+* CSS tweaks
+
 = 1.1 =
 * Added class_exists to prevent conflict
 
@@ -70,6 +78,14 @@ It does display a warning when you are editing a protected plugin, but does not 
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.3 =
+* Fix conflicts with Press Permit
+
+= 1.2 =
+* Reverted capability for allowing/disallowing protection from 'edit_plugins' to 'activate_plugins'
+* Wrapped code in class
+* CSS tweaks
 
 = 1.1 =
 * Added class_exists to prevent conflict

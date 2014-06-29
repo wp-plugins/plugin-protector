@@ -1,19 +1,18 @@
-#wpsn-outer-container {
+.wpsn-outer-container {
 	position: absolute;
 	right: 0px;
 	overflow-x: hidden;
 	margin: 0 auto;
 	width: 62px;
-	height: 250px;
 }
 
-#wpsn-outer-container .active {
+.wpsn-outer-container .active {
 	overflow: visible;
 }
-#wpsn-outer-container > div {
+.wpsn-outer-container > div {
 	height: 130px;
 }
-	#wpsn-outer-container .wpsn-notice {
+	.wpsn-outer-container .wpsn-notice {
 		z-index: 80002;
 		position: absolute;
 		right: -680px;
@@ -25,24 +24,26 @@
 		zoom: 1;
 		filter: alpha(opacity=60);
 		opacity: 0.60;
-		/*border-left: 4px solid #7ad03a;*/
 	}
 
-	#wpsn-outer-container .wpsn-notice a {
+	.wpsn-outer-container .wpsn-notice a {
 		text-decoration: none;
+	}
+
+	.wpsn-outer-container .wpsn-notice img {
+		margin-right: 20px;
 	}
 
 		.wpsn-notice:before {
 		  font-family: dashicons;
 		  font-size: 2em;
-		  /*color: #e78316;*/
 		  display: inline-block;
 		  vertical-align: top;
 		  margin-top: .4em;
 		  margin-right: .5em;
 		}
 
-		#wpsn-outer-container .wpsn-notice p {
+		.wpsn-outer-container .wpsn-notice p {
 		  display: inline-block;
 		  width: 93%;
 		  line-height: 1.5;
@@ -51,8 +52,8 @@
 		}
 
 		/* toggled .selected w/jquery accounts for clicks on touch devices */
-		#wpsn-outer-container .wpsn-notice:hover,
-		#wpsn-outer-container .wpsn-notice.selected {
+		.wpsn-outer-container .wpsn-notice:hover,
+		.wpsn-outer-container .wpsn-notice.selected {
 			right: 0px;
 			zoom: 1;
 			overflow: visible;
@@ -70,41 +71,15 @@
 		}
 
 @media only screen and (max-width: 767px) {
-	#wpsn-outer-container .wpsn-notice {
-		/*right: -490px;
-		max-width: 487px;
-		width: 487px;
-		min-width: 480px;
-		border-top: 2px solid #333;*/
+	.wpsn-outer-container .wpsn-notice {
 		display: none;
 	}
 
-		#wpsn-outer-container .wpsn-notice:before {
-			display: none;
-		}
+	.wpsn-outer-container .wpsn-notice:before {
+		display: none;
+	}
 
-		#wpsn-outer-container .wpsn-notice p {
-			width: 93%;
-		}
-
-}
-
-.pp-locked {
-	color:#000;
-	position: relative;
-	top: -3px;
-}
-.pp-unlocked {
-	filter: alpha(opacity=30);
-	opacity: 0.30;
-	position: relative;
-	top: -3px;
-}
-.widefat .column-pp-protected {
-	vertical-align: middle;
-	width: 3em;
-}
-.widefat .column-pp-pluginname {
-	width: 15em;
-	vertical-align: middle;
+	.wpsn-outer-container .wpsn-notice p {
+		width: 93%;
+	}
 }
