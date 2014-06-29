@@ -41,6 +41,15 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 		 */
 		public $prefix;
 
+		/**
+		 * Height of notice div.
+		 *
+		 * @since    1.0
+		 *
+		 * @var      array
+		 */
+		public $height;
+
 
 		/*---------------------------------------------------------------------------------*
 		 * Consturctor
@@ -51,11 +60,13 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 		 *
 		 * @since     1.0
 		 */
-		public function __construct( $prefix ) {
+		public function __construct( $prefix, $height = '200' ) {
 
 			$this->prefix = $prefix;
 
-			$this->notices = get_option( $this->prefix . '_wpsn_notices', array() );
+			$this->height = $height;
+
+			$this->notices = get_option( $this->prefix . '_side_notices', array() );
 
 			// Load the administrative Stylesheets and JavaScript
 			add_action( 'admin_enqueue_scripts', WP_Side_Notice::add_stylesheets_and_javascript() );
@@ -75,7 +86,7 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 		 * @since    2.1.3
 		 */
 		public function add_stylesheets_and_javascript() {
-			wp_enqueue_style( 'wp-side-notice-style', plugin_dir_url( __FILE__ ) . 'style.css', array(), $this->version, 'screen' );
+			wp_enqueue_style( 'wp-side-notice-style', plugin_dir_url( __FILE__ ) . 'wpsn.css', array(), $this->version, 'screen' );
 			wp_enqueue_script( 'wp-side-notice-js', plugin_dir_url( __FILE__ ) . 'wpsn.js' , array(), $this->version, FALSE );
 		} // end add_stylesheets_and_javascript
 
@@ -87,7 +98,28 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 		public function add( $args ) {
 
 			$this->notices[ $args['name'] ] = $args;
-			update_option( $this->prefix . '_wpsn_notices', $this->notices );
+			update_option( $this->prefix . '_side_notices', $this->notices );
+
+		}
+
+		/**
+		 * Remove notices from the array.
+		 *
+		 * @since    1.0
+		 */
+		public function remove( $args = 'all' ) {
+
+			if ( 'all' == $args ) {
+				foreach ( $this->notices as $name => $notice ) {
+					unset( $this->notices[ $name ] );
+				}
+			} else {
+				foreach ( $args as $name ) {
+					unset( $this->notices[ $name ] );
+				}
+			}
+
+			update_option( $this->prefix . '_side_notices', $this->notices );
 
 		}
 
@@ -102,10 +134,10 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 			$current_user = wp_get_current_user();
 
 			// Get the notice options from the user
-			$user_notices = get_user_meta( $current_user->ID, $this->prefix . '_wpsn_user', TRUE );
+			$user_notices = get_user_meta( $current_user->ID, $this->prefix . '_user_side_notices', TRUE );
 
 			// If not yet set, then set the usermeta as an array
-			! is_array( $user_notices ) ? add_user_meta( $current_user->ID, $this->prefix . '_wpsn_user', array() ) : FALSE;
+			! is_array( $user_notices ) ? add_user_meta( $current_user->ID, $this->prefix . '_user_side_notices', array() ) : FALSE;
 
 			// Create specific notices if they do not exist, otherwise set to current notice state
 			foreach ( $this->notices as $name => $notice ) {
@@ -115,13 +147,14 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 						'time'    => $notice['time'],
 						);
 				}
+
 			}
 
 			// Update the users meta
-			update_user_meta( $current_user->ID, $this->prefix . '_wpsn_user', $user_notices );
+			update_user_meta( $current_user->ID, $this->prefix . '_user_side_notices', $user_notices );
 
 			// Set the variable that will hold the html
-			$html = '<div id="wpsn-outer-container">';
+			$html = '<div class="wpsn-outer-container" style="height:' . $this->height . '">';
 			
 			// Loop though the notices
 			foreach ( $this->notices as $name => $notice ) {
@@ -132,7 +165,7 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 						$html .= ( (float) $GLOBALS['wp_version'] < 3.8 ) ? '' : '<style type="text/css">#wpsn-' . $name . '-container div.wpsn-notice:before{content:\'\\' . $notice['style']['icon'] . '\';}</style>';
 						$html .= '<div class="wpsn-notice update-nag" style="border-left: 4px solid ' . esc_attr( $notice['style']['color'] ) . ';">';
 							$html .= '<p>';
-								$html .= $notice['content'];
+								$html .= apply_filters( $name . '_side_notice_content', $notice['content'], $notice, $current_user );
 								$html .= $this->get_dismissals( $name );
 							$html .= '</p>';
 						$html .= '</div>';
@@ -200,7 +233,7 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 				$current_user = wp_get_current_user();
 
 				// Get the notice options from the user
-				$user_notices = get_user_meta( $current_user->ID, $this->prefix . '_wpsn_user', TRUE );
+				$user_notices = get_user_meta( $current_user->ID, $this->prefix . '_user_side_notices', TRUE );
 
 				// If they've postponed the review and duration is set
 				if ( 'dismiss' == $_GET[ $this->prefix . '-wpsn-action' ] && isset( $_GET['duration'] ) && isset( $_GET['notice'] ) && check_admin_referer( 'wpsn-notice' ) ) {
@@ -226,7 +259,7 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 					}
 
 					// Update the option
-					update_user_meta( $current_user->ID, $this->prefix . '_wpsn_user', $user_notices );
+					update_user_meta( $current_user->ID, $this->prefix . '_user_side_notices', $user_notices );
 				}
 
 			}
