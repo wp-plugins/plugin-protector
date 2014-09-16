@@ -66,13 +66,15 @@ if ( ! class_exists( 'WP_Side_Notice' ) ) {
 
 			$this->height = $height;
 
+			$this->version = 1.0;
+
 			$this->notices = get_option( $this->prefix . '_side_notices', array() );
 
 			// Load the administrative Stylesheets and JavaScript
-			add_action( 'admin_enqueue_scripts', WP_Side_Notice::add_stylesheets_and_javascript() );
+			add_action( 'admin_enqueue_scripts', array( $this, 'add_stylesheets_and_javascript' ) );
 
 			// Process responses to the notices
-			add_action( 'admin_init', WP_Side_Notice::process_response() );
+			add_action( 'admin_init',  array( $this, 'process_response' ) );			
 
 		} // end constructor
 

@@ -48,6 +48,9 @@ It does display a warning when you are editing a protected plugin, but does not 
 
 == Changelog ==
 
+= 1.4 =
+* Bug fix for side notice class
+
 = 1.3 =
 * Fix conflicts with Press Permit
 
