@@ -1,18 +1,18 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 1.3
+ * @version 1.4
  */
 /*
 Plugin Name: Plugin Protector
 Plugin URI: http://vandercar.net/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 1.3
+Version: 1.4
 Author URI: http://vandercar.net
 */
 
-define( 'PPr_VERSION', '1.3' );
+define( 'PPr_VERSION', '1.4' );
 define( 'PPr_DIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'PPr_DIR_URL', plugin_dir_url( __FILE__ ) );
 
@@ -34,6 +34,15 @@ class Plugin_Protector {
 	 */
 	protected static $instance = null;
 
+	/**
+	 * Side notices.
+	 *
+	 * @since    1.4
+	 *
+	 * @var      array
+	 */
+	protected $notices;
+
 	/*---------------------------------------------------------------------------------*
 	 * Consturctor / The Singleton Pattern
 	 *---------------------------------------------------------------------------------*/
@@ -46,6 +55,9 @@ class Plugin_Protector {
 	private function __construct() {
 
 		global $pagenow;
+
+		// Set plugin protector notices
+		$this->notices = new WP_Side_Notice( 'pp' );
 
 		// check if plugin has updated and respond accordingly
 		add_action( 'admin_init', array( $this, 'check_plugin_update' ) );
@@ -171,7 +183,7 @@ class Plugin_Protector {
 	 */
 	public function add_wpsn_notices() {
 
-		$side_notices = new WP_Side_Notice( 'pp' );
+		$side_notices = $this->notices;
 
 		$pp_notices = array(
 			'pp-info' => array(
@@ -298,8 +310,8 @@ class Plugin_Protector {
 
 		<div class="wrap">
 			<?php
-				$pp_notices = new WP_Side_Notice( 'pp' );
-				$pp_notices->display();
+				
+				$this->notices->display();
 			?>
 			<h2>Protected Plugins</h2>
 			<?php echo (float) $GLOBALS['wp_version'] < 3.8 ? '<style type="text/css">.widefat #pp-protected.column-pp-protected {width: 6em;}</style>' : ''; ?>
