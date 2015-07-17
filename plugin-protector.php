@@ -1,23 +1,28 @@
 <?php
 /**
  * @package Plugin Protector
- * @version 1.4
+ * @version 1.5
  */
 /*
 Plugin Name: Plugin Protector
 Plugin URI: http://vandercar.net/wp/plugin-protector/
 Description: Protects against inadvertant update and deletion of select plugins.
 Author: Joshua Vandercar
-Version: 1.4
+Version: 1.5
 Author URI: http://vandercar.net
 */
 
-define( 'PPr_VERSION', '1.4' );
+define( 'PPr_VERSION', '1.5' );
 define( 'PPr_DIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'PPr_DIR_URL', plugin_dir_url( __FILE__ ) );
 
-is_admin() ? require_once( PPr_DIR_PATH . 'wp-side-notice/class-wp-side-notice.php' ) : FALSE;
-is_admin() ? Plugin_Protector::get_instance() : FALSE;
+add_action( 'init', 'ppr_do_plugin' );
+function ppr_do_plugin() {
+
+	is_admin() ? require_once( PPr_DIR_PATH . 'wp-side-notice/class-wp-side-notice.php' ) : FALSE;
+	is_admin() ? Plugin_Protector::get_instance() : FALSE;
+
+}
 
 class Plugin_Protector {
 
@@ -43,6 +48,15 @@ class Plugin_Protector {
 	 */
 	protected $notices;
 
+	/**
+	 * Side notices.
+	 *
+	 * @since    1.4
+	 *
+	 * @var      array
+	 */
+	protected $protected;
+
 	/*---------------------------------------------------------------------------------*
 	 * Consturctor / The Singleton Pattern
 	 *---------------------------------------------------------------------------------*/
@@ -59,21 +73,21 @@ class Plugin_Protector {
 		// Set plugin protector notices
 		$this->notices = new WP_Side_Notice( 'pp' );
 
+		// Get the protectect plugins and set
+		$this->protected = is_multisite() ? get_site_option( 'pp_settings' ) : get_option( 'pp_settings' );
+
 		// check if plugin has updated and respond accordingly
 		add_action( 'admin_init', array( $this, 'check_plugin_update' ) );
 
 		// load activation notice to guide users to the next step
 		add_action( 'admin_notices', array( $this, 'display_plugin_activation_message' ) );
 
-		// add notices on plugin activation
-		//register_activation_hook( PRESSGRAM_DIR_PATH . 'pressgram.php', array( $this, 'add_wpsn_notices' ) );
-
 		// remove active plugin marker
 		register_deactivation_hook( __FILE__, array( $this, 'remove_activation_marker' ) );
 
 		// check current admin page
 		if ( 'plugins.php' == $pagenow ) {
-			
+
 			// call to enqueue admin scripts and styles
 			add_action( 'admin_enqueue_scripts', array( $this, 'add_stylesheets_and_javascript' ) );
 
@@ -94,11 +108,16 @@ class Plugin_Protector {
 		// add menu item
 		is_multisite() ? add_action( 'network_admin_menu', array( $this, 'pp_add_plugins_link' ) ) : add_action( 'admin_menu', array( $this, 'pp_add_plugins_link' ) );
 
-		// save settings at plugin.php?page=pp-protected
-		add_action( 'admin_init', array( $this, 'pp_write_settings' ) );
+		if ( 'plugins.php' == $pagenow ) {
+			// save settings at plugin.php?page=pp-protected
+			add_action( 'admin_init', array( $this, 'pp_write_settings' ) );
+		}
 
 		// intercept various plugin page actions
 		add_action( 'check_admin_referer', array( $this, 'pp_intercept_action' ), 10, 2 );
+
+		// intercept various plugin ajax actions
+		add_action( 'check_ajax_referer', array( $this, 'pp_intercept_action_ajax' ), 10, 2 );
 
 		// determine notices to display
 		is_multisite() ? add_action( 'network_admin_notices', array( $this, 'pp_notice' ) ) : add_action( 'admin_notices', array( $this, 'pp_notice' ) );
@@ -190,7 +209,7 @@ class Plugin_Protector {
 				'name' => 'pp-info',
 				'trigger' => TRUE,
 				'time' => time() - 5,
-				'dismiss' => '',
+				'dismiss' => 'none',
 				'content' => '<a href="http://wordpress.org/plugins/plugin-protector">Plugin Protector</a> developed by <a href="http://vandercar.net/wp">UaMV</a>.',
 				'style' => array( 'height' => '72px', 'color' => '#dd9701', 'icon' => 'f348' ),
 				'location' => array( 'plugins.php' ),
@@ -199,26 +218,17 @@ class Plugin_Protector {
 				'name' => 'pp-support',
 				'trigger' => TRUE,
 				'time' => time() - 5,
-				'dismiss' => '',
-				'content' => 'Require assistance? Find (or offer) support in the <a href="http://wordpress.org/support/plugin/plugin-protector/">support forum</a>.',
-				'style' => array( 'height' => '72px', 'color' => '#dd9701', 'icon' => 'f338' ),
+				'dismiss' => 'none',
+				'content' => 'Require assistance? Find or offer <a href="http://wordpress.org/support/plugin/plugin-protector/">support</a>.&nbsp;&nbsp;&nbsp;&bull;&nbsp;&nbsp;&nbsp;All is well? Consider <a href="http://wordpress.org/support/view/plugin-reviews/plugin-protector#postform">reviewing the plugin</a>.',
+				'style' => array( 'height' => '72px', 'color' => '#dd9701', 'icon' => 'f240' ),
 				'location' => array( 'plugins.php' ),
 				),
-			'pp-give' => array(
-				'name' => 'pp-give',
-				'trigger' => TRUE,
-				'time' => time() - 5,
-				'dismiss' => '',
-				'content' => 'How are we doing? <a href="http://wordpress.org/support/view/plugin-reviews/plugin-protector#postform">Review the plugin</a> or <a href="http://vandercar.net/wp">give a dollar</a> for every headache we\'ve averted.',
-				'style' => array( 'height' => '72px', 'color' => '#dd9701', 'icon' => 'f313' ),
-				'location' => array( 'plugins.php' ),
-				)
 			);
 
 
 		// remove the old notices
 		method_exists( 'WP_Side_Notice', 'remove' ) ? $side_notices->remove() : FALSE;
-		
+
 		// add each notice defined above
 		foreach ( $pp_notices as $notice => $args ) {
 			$side_notices->add( $args );
@@ -234,9 +244,9 @@ class Plugin_Protector {
 	 * @since    1.2
 	 */
 	public function add_stylesheets_and_javascript() {
-		
+
 		wp_enqueue_style( 'pp-style', PPr_DIR_URL . 'css/main.css', array(), PPr_VERSION, 'screen' );
-		
+
 	} // end add_stylesheets_and_javascript
 
 
@@ -254,8 +264,8 @@ class Plugin_Protector {
 	**************************************/
 
 	function pp_manage_plugin_customized_column( $column_name, $id ) {
-		$pp_options = is_multisite() ? get_site_option( 'pp_settings' ) : get_option( 'pp_settings' );
-		
+		$pp_options = $this->protected;
+
 		switch( $column_name ) {
 			case 'plugin_protected':
 				$pp_notes = isset ( $pp_options[ $id ]['notes'] ) ? esc_attr( $pp_options[ $id ]['notes'] ) : '';  // Get notes
@@ -288,7 +298,7 @@ class Plugin_Protector {
 	**************************************/
 
 	function pp_write_settings() {
-		if ( isset( $_GET['action'] ) && 'update' == $_GET['action'] && ! isset( $_GET['pp-wpsn-action'] ) ) {
+		if ( isset( $_GET['action'] ) && 'update' == $_GET['action'] && isset( $_GET['page'] ) && 'pp-protected' == $_GET['page'] && ! isset( $_GET['pp-wpsn-action'] ) ) {
 
 			$pp_settings = $_POST['pp_settings'];
 
@@ -305,12 +315,12 @@ class Plugin_Protector {
 	**************************************/
 
 	function pp_plugins_page() {
-	 
+
 		$pp_table = new PPr_List_Table();  // Create PP_List_Table object :: begin page display ?>
 
 		<div class="wrap">
 			<?php
-				
+
 				$this->notices->display();
 			?>
 			<h2>Protected Plugins</h2>
@@ -335,14 +345,14 @@ class Plugin_Protector {
 		switch ( $action ) {  // Intercept and redirect on certain page/action combinations
 			case 'upgrade-plugin':  // Intercept single plugin updates from update now link
 				$pp_action = isset( $_GET['pp-action'] ) ? $_GET['pp-action'] : 'checking-single';  // Check for pp-action
-				
+
 				if ( ('override' != $pp_action ) && ! isset( $_POST['password'] ) ) {  // If override not triggered, proceed with intercept
-					$pp_options = get_option( 'pp_settings' );
-				
+					$pp_options = $this->protected;
+
 					$plugin = $_GET['plugin'];
 					if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
 						if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
-							wp_redirect( self_admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );  
+							wp_redirect( self_admin_url( 'plugins.php?pp-action=notify-upgrade&pp-plugin=' . urlencode( $plugin ) ) );
 							exit;
 						}
 					}
@@ -352,7 +362,7 @@ class Plugin_Protector {
 				$pp_action = isset($_GET['pp-action']) ? $_GET['pp-action'] : 'checking-bulk';  // Check for pp-action
 
 				if ( 'override' != $pp_action && 'bulk-update-plugins' != $referer && ! isset( $_POST['password'] ) ) {  // If override not triggered, proceed with intercept
-					$pp_options = get_option( 'pp_settings' );
+					$pp_options = $this->protected;
 
 					// Get selected plugins
 					if ( isset( $_GET['plugins'] ) )
@@ -381,9 +391,9 @@ class Plugin_Protector {
 				break;
 			case 'do-plugin-upgrade': // Updating from WP Updates page
 				$pp_action = isset( $_GET['pp-action'] ) ? $_GET['pp-action'] : 'checking-bulk-core';  // Check for pp-action
-				
+
 				if ( 'override' != $pp_action && 'bulk-update-plugins' != $referer ) {  // If override not triggered, proceed with intercept
-					$pp_options = get_option( 'pp_settings' );
+					$pp_options = $this->protected;
 
 					// Get selected plugins
 					if ( isset( $_GET['plugins'] ) ) {
@@ -414,7 +424,7 @@ class Plugin_Protector {
 				break;
 			case 'delete-selected': // Deleting from link or bulk actions
 				if ( ! isset( $_REQUEST['verify-delete'] ) ) {  // If verify delete has not been triggered, intercept
-					$pp_options = get_option( 'pp_settings' );
+					$pp_options = $this->protected;
 
 					$plugins = isset( $_REQUEST['checked'] ) ? (array) $_REQUEST['checked'] : array();  // Get selected plugins
 
@@ -431,10 +441,55 @@ class Plugin_Protector {
 				break;
 			default:
 				break;
-		}		
+		}
 
 	}
-	
+
+	/**************************************
+	* INTERCEPT UPDATE & DELETE ACTIONS
+	**************************************/
+
+	function pp_intercept_action_ajax( $action, $result ) {
+
+		switch ( $action ) {  // Intercept and redirect on certain page/action combinations
+			case 'updates':  // Intercept single plugin updates from update now link
+				$pp_action = isset( $_POST['pp-action'] ) ? $_POST['pp-action'] : 'checking-single';  // Check for pp-action
+
+				if ( 'override' != $pp_action ) {  // If override not triggered, proceed with intercept
+
+					$plugin = urldecode( $_POST['plugin'] );
+
+					$status = array(
+						'update'     => 'plugin',
+						'plugin'     => $plugin,
+						'slug'       => sanitize_key( $_POST['slug'] ),
+						'oldVersion' => '',
+						'newVersion' => '',
+					);
+
+					$pp_options = $this->protected;
+
+					if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
+
+						if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
+							define( 'DISALLOW_FILE_MODS', true );
+
+							$message = 'The plugin <code>' . $plugin . '</code> has been marked as protected! To override protection and initiate update, click <a href="' . wp_nonce_url( self_admin_url( 'update.php?action=upgrade-plugin&plugin=' . urlencode( $plugin ) . '&pp-action=override' ), 'upgrade-plugin_' . $plugin ) . '">here</a>.'; // need to add class="update-link" and ajaxify
+							$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
+							$status['error'] = __( $message );
+
+							wp_send_json_error( $status );
+							exit;
+						}
+					}
+				}
+				break;
+			default:
+				break;
+		}
+
+	}
+
 	/**************************************
 	* DETERMINE NOTICES TO SHOW AND DISPLAY
 	**************************************/
@@ -449,7 +504,7 @@ class Plugin_Protector {
 
 			! empty ( $plugin ) ? update_option( 'pp_currently_editing', $plugin ) : FALSE ;
 
-			if ( empty ( $_GET['file'] ) && empty ( $plugin ) ) {		
+			if ( empty ( $_GET['file'] ) && empty ( $plugin ) ) {
 				$plugins = get_plugins();
 				$plugin = array_keys($plugins);
 				$plugin = $plugin[0];
@@ -457,8 +512,8 @@ class Plugin_Protector {
 			} elseif ( empty( $plugin ) ) {
 				$plugin = get_option( 'pp_currently_editing' );
 			}
-			
-			$pp_options = get_option( 'pp_settings' );
+
+			$pp_options = $this->protected;
 
 			if ( isset ( $pp_options[ $plugin ]['protected'] ) ) {
 				if ( $pp_options[ $plugin ]['protected'] ) {  // If requested plugin is protected, redirect and trigger notification with pp-action=notify-upgrade :: pass plugin through URL
@@ -467,21 +522,21 @@ class Plugin_Protector {
 					if ( $updated ) {  // If edit has been committed
 						$message = 'ALERT: Protection of <code>' . $plugin . '</code> has been overriden. Any further edits committed below to the file (<code>' . $file . '</code>) will override protection!';
 						$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
-						
+
 						$this->pp_showNotice( $message, TRUE );
 					} else {
 						$message = 'CAUTION: This plugin (<code>' . $plugin . '</code>) has been marked as protected. Any edits committed below to the file (<code>' . $file . '</code>) will override this protection!';
 						$message .= '' != $pp_options[ $plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $plugin ]['notes'] ) . "</blockquote>" : FALSE;
-						
+
 						$this->pp_showNotice( $message, TRUE );
 					}
 				}
-			}				
+			}
 		}
 
 		if ( isset( $_GET['pp-action'] ) ) {
 			global $pagenow;  // Get WP global for current page
-			$pp_options = get_option( 'pp_settings' );
+			$pp_options = $this->protected;
 
 			switch ( $_GET['pp-action'] ) {  // Act on certain plugin protector actions
 				case 'notify-upgrade':  // Having intercepted a single plugin upgrade, do this ...
@@ -490,7 +545,7 @@ class Plugin_Protector {
 					// Define content of notice
 					$message = 'This plugin (<code>' . $pp_plugin . '</code>) has been protected. To override protection and initiate update, click <a href="' . wp_nonce_url( self_admin_url( 'update.php?action=upgrade-plugin&plugin=' . $pp_plugin . '&pp-action=override' ), 'upgrade-plugin_' . $pp_plugin ) . '">here</a>.';
 					$message .= '' != $pp_options[ $pp_plugin ]['notes'] ? "<blockquote>Note: " . esc_html( $pp_options[ $pp_plugin ]['notes'] ) . "</blockquote>" : FALSE;
-					
+
 					$this->pp_showNotice( $message, TRUE );
 					break;
 				case 'notify-update':  // Having intercepted a bulk plugin update, do this ...
@@ -513,7 +568,7 @@ class Plugin_Protector {
 						default:
 							break;
 					}
-					
+
 					$this->pp_showNotice( 'To override protection and initiate update, click <a href="' . wp_nonce_url( self_admin_url( $pagenow .'?action=' . $action . '&plugins=' . $_GET['plugins'] . '&pp-action=override' ), $pp_nonce ) . '">here</a>.', TRUE );
 					break;
 				case 'override':  // Having overridden a plugin protector warning, do this ...

@@ -3,8 +3,8 @@ Contributors: UaMV
 Donate link: http://vandercar.net/wp
 Tags: plugins, protect, protector, protection, safe, lock, update, upgrade, delete, development
 Requires at least: 3.1
-Tested up to: 4.0
-Stable tag: trunk
+Tested up to: 4.2.2
+Stable tag: 1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -48,6 +48,10 @@ It does display a warning when you are editing a protected plugin, but does not 
 
 == Changelog ==
 
+= 1.5 =
+* Adds compatibility with ajaxified updates introduced in WP 4.2
+* Multisite fix for intercepting updates to protected plugins.
+
 = 1.4 =
 * Bug fix for side notice class
 
@@ -81,6 +85,10 @@ It does display a warning when you are editing a protected plugin, but does not 
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.5 =
+* Adds compatibility with ajaxified updates introduced in WP 4.2
+* Multisite fix for intercepting updates to protected plugins.
 
 = 1.3 =
 * Fix conflicts with Press Permit
